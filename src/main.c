@@ -5,6 +5,7 @@
 
 
 #include "gbc_hicolor.h"
+#include "rng_data.h"
 
 // GBC HiColor images; header file names align with png file names
 //#include "gbbsod.h"
@@ -54,7 +55,9 @@ const far_ptr_t hicolors[] = {
 void main(void) {
 
     // Image toggling variable, by default show a random entry
-    uint8_t  img_select = 0;
+    rng_load();
+    uint8_t  img_select = rand() % (uint8_t)ARRAY_LEN(hicolors);
+    rng_save();
     bool     first_pass = true;
     uint8_t  scroll_limit = 0;
     const    hicolor_data * p_hicolor;
@@ -75,7 +78,9 @@ void main(void) {
             // Change displayed Hi Color image when pressing A or B
             if (BUTTON_TOGGLED(J_A | J_B | J_LEFT | J_RIGHT) || first_pass) {
 
+                // Mix user input into the RNG and save it to SRAM
                 rng_mix();
+
                 // Cycle through which image to show next
                 if (BUTTON_TOGGLED(J_A | J_RIGHT)) {
                     img_select++;
