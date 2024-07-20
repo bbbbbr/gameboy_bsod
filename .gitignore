@@ -3,8 +3,7 @@ work/
 notes/
 archived_builds/
 build/
-*.noi
-*.sav
+bin/
 !res/source_audio/*.sav
 *.ini
 package/
