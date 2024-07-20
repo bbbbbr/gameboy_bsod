@@ -13,6 +13,10 @@ LCCFLAGS += -Wl-yt0x1B        # MBC5 + SRAM  Battery
 LCCFLAGS += -autobank -Wb-v -Wb-ext=.rel # Auto-bank packing
 LCCFLAGS += -Wm-yoA -Wm-ya4 # auto rom sizing and 4 cart SRAN banks
 
+# Set ROM Title / Name
+#                 "123456789012345"
+LCCFLAGS += -Wm-yn"GB BSOD"
+
 # For testing only: randomize autobank assignment
 # LCCFLAGS += -Wb-random -Wb-max=3 -Wb-v
 
