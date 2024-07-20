@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <rand.h>
+#include <gb/crash_handler.h>
 
 
 #include "gbc_hicolor.h"
@@ -52,7 +53,22 @@ const far_ptr_t hicolors[] = {
 };
 
 
+void check_game_boy_color(void) {
+
+    if (_cpu != CGB_TYPE) {
+        // If it's not a Game Boy Color then...
+        __HandleCrash();
+
+        // Could yolo it and crash with style to the crash handler ;D
+        // void (*lets_gooooo)(void) = (void (*)(void))randw();
+        // lets_gooooo();
+    }
+}
+
+
 void main(void) {
+
+    check_game_boy_color();
 
     uint8_t  img_select;
     // Image toggling variable, by default show a random entry
