@@ -54,10 +54,14 @@ const far_ptr_t hicolors[] = {
 
 void main(void) {
 
+    uint8_t  img_select;
     // Image toggling variable, by default show a random entry
+    // If SRAM RNG data is not initialized then show the default first image (0)
     rng_load();
-    uint8_t  img_select = rand() % (uint8_t)ARRAY_LEN(hicolors);
+    if (rng_is_initialized())  img_select = (rand() + 1u) % (uint8_t)ARRAY_LEN(hicolors);
+    else img_select = 0u;
     rng_save();
+
     bool     first_pass = true;
     uint8_t  scroll_limit = 0;
     const    hicolor_data * p_hicolor;
