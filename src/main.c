@@ -21,6 +21,8 @@
 
 #include "pc_biosboot.h"
 #include "gb_bios_setup_everdrive.h"
+#include "everdrive_boot_error.h"
+#include "ezflash_boot_error.h"
 
 
 typedef struct far_ptr_t {
@@ -30,6 +32,7 @@ typedef struct far_ptr_t {
 
 void check_game_boy_color(void);
 void show_biosboot(void);
+void show_sd_boot_error(void);
 void load_hicolor(far_ptr_t p_img_data);
 
 
@@ -39,6 +42,10 @@ uint8_t  scroll_limit = 0;
 const uint8_t blank_tile[] = {0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0};
 
 #define ARRAY_LEN(A)  (sizeof(A) / sizeof(A[0]))
+
+#define SHOW_SD_BOOT_THRESHOLD         10u // chances of showing sd boot error
+#define SHOW_SD_BOOT_THRESHOLD_REBOOT  50u // chances of showing sd boot error on reboot key combo
+#define SHOW_SD_BOOT_RANGE            100u // random range size
 
 
 // Array of pointers to the generated hicolor data structures
@@ -51,6 +58,12 @@ const far_ptr_t hicolors[] = {
     { BANK(macosx_panic),           &HICOLOR_VAR(macosx_panic) },
     { BANK(gbstudio_panic),         &HICOLOR_VAR(gbstudio_panic) },
     { BANK(amiga_meditate),         &HICOLOR_VAR(amiga_meditate) },
+};
+
+// Sometimes on startup show a flash card boot error
+const far_ptr_t hicolors_sd_boot_error[] = {
+    { BANK(ezflash_boot_error),     &HICOLOR_VAR(ezflash_boot_error) },
+    { BANK(everdrive_boot_error),   &HICOLOR_VAR(everdrive_boot_error) },
 };
 
 
@@ -69,10 +82,6 @@ void check_game_boy_color(void) {
     if (_cpu != CGB_TYPE) {
         // If it's not a Game Boy Color then...
         __HandleCrash();
-
-        // Could yolo it and crash with style to the crash handler ;D
-        // void (*lets_gooooo)(void) = (void (*)(void))randw();
-        // lets_gooooo();
     }
 }
 
@@ -88,8 +97,23 @@ void show_biosboot(void) {
         load_hicolor(hicolors_boot[BOOT_HICOL_EVERDRIVE]);
         waitpadup();
         waitpad(J_ANY);
+    } else {
+        // Display a flash card sd boot error about half the time
+        bool display_sd_boot_error = ((uint8_t)rand() % SHOW_SD_BOOT_RANGE) < SHOW_SD_BOOT_THRESHOLD_REBOOT;
+
+        if (display_sd_boot_error) show_sd_boot_error();
     }
 
+    UPDATE_BUTTONS();
+}
+
+
+void show_sd_boot_error(void) {
+    uint8_t img_select = (rand()) % (uint8_t)ARRAY_LEN(hicolors_sd_boot_error);
+    load_hicolor(hicolors_sd_boot_error[img_select]);
+
+    waitpadup();
+    waitpad(J_ANY);
     UPDATE_BUTTONS();
 }
 
@@ -142,12 +166,19 @@ void main(void) {
 
     check_game_boy_color();
 
+    bool     display_sd_boot_error = false;
     bool     first_pass = true;
     uint8_t  img_select;
+
     // Image toggling variable, by default show a random entry
     // If SRAM RNG data is not initialized then show the default first image (0)
     rng_load();
-    if (rng_is_initialized())  img_select = (rand() + 1u) % (uint8_t)ARRAY_LEN(hicolors);
+    if (rng_is_initialized()) {
+        // On some bootups show a SD Flashcard (everdrive/ezflash) boot error
+        display_sd_boot_error = ((uint8_t)rand() % SHOW_SD_BOOT_RANGE) < SHOW_SD_BOOT_THRESHOLD;
+
+        img_select = (rand() + 1u) % (uint8_t)ARRAY_LEN(hicolors);
+    }
     else img_select = 0u;
     rng_save();
 
@@ -157,6 +188,8 @@ void main(void) {
     if (_cpu == CGB_TYPE) {
         // CGB running in the double speed mode is required
         cpu_fast();
+
+        if (display_sd_boot_error) show_sd_boot_error();
 
         while(true) {
 
