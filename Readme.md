@@ -1,3 +1,7 @@
+# Download
+Pre-built ROM downloads of this are available at https://bbbbbr.itch.io/game-boy-bsod.
+
+# About
 A little joke Blue Screen of Death simulator (BSOD) for the Game Boy with various versions of the screen and different operating systems.
 
 ![Screenshot](info/gb_winbsod_3.png)
